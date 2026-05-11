@@ -57,3 +57,13 @@ operators can install Cody without forking the framework.
 - Per-goal worktree isolation (nexo-rs Phase 67.6) keeps the
   daemon's source safe even when Cody dispatches against
   itself in dev mode (`NEXO_DISALLOW_SELF_MODIFY` unset).
+
+### Coming in v0.2.x
+
+- `nexo persona install lordmacu/nexo-persona-cody[@v0.2.0]` CLI
+  flow mirroring the existing `nexo plugin install` pipeline
+  (GitHub Releases tarball + sha256 + optional cosign verify
+  + boot-time auto-discovery). Tracking item filed in nexo-rs
+  `FOLLOWUPS.md` as the `cody-cli-install` follow-up wave.
+  `install.sh` will keep working alongside the CLI for airgapped
+  / dev-loop scenarios.

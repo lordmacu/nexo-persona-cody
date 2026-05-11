@@ -21,13 +21,31 @@ pair that:
 
 ## Install
 
+Two install modes coexist:
+
+### A) `nexo persona install` (canonical, future v0.2.x)
+
+Deferred follow-up — to land in v0.2.x as a mirror of the existing
+`nexo plugin install <owner>/<repo>` flow (Phase 31.1.c of nexo-rs).
+Will be:
+
+```bash
+nexo persona install lordmacu/nexo-persona-cody[@v0.2.0]
+```
+
+Same UX as plugins: GitHub Releases tarball download + sha256 +
+optional cosign verify + extract to the daemon's persona discovery
+path + boot-time auto-discovery.
+
+### B) `./install.sh` (today + airgapped / dev-loop)
+
 ```bash
 git clone https://github.com/lordmacu/nexo-persona-cody ~/chat/nexo-persona-cody
 cd ~/chat/nexo-persona-cody
 ./install.sh
 ```
 
-The script:
+Available NOW (v0.1.x). The script:
 
 1. Pre-checks `nexo` ≥ 0.1.6 + `git` + `bash` 4+.
 2. Copies `agents.d/cody.yaml` into your daemon's config dir.
@@ -39,6 +57,11 @@ The script:
 
 Default config dir is `~/.nexo`. Override with
 `./install.sh --config-dir /your/path`.
+
+The shell script will keep working alongside the CLI flow once
+v0.2.x ships — useful for airgapped hosts with no GitHub access,
+CI pipelines that don't want to invoke `nexo` to avoid daemon
+state, and inner-loop development against an unreleased pack.
 
 ## Setup after install
 
