@@ -28,20 +28,17 @@ daemon. Zero config required to boot since Phase 93 — `nexo
 daemon` runs against `Default::default()` for every YAML when the
 config dir is missing or partial.
 
-Pick one:
+Pick a channel from the
+[installation guide](https://lordmacu.github.io/nexo-rs/getting-started/installation.html):
 
 ```bash
-# Debian / Ubuntu
-curl -fsSL https://nexo-rs.dev/install.deb.sh | sudo bash
+# Cargo (works anywhere with the Rust toolchain installed)
+cargo install --git https://github.com/lordmacu/nexo-rs nexo-rs
 
-# Fedora / RHEL / Rocky
-curl -fsSL https://nexo-rs.dev/install.rpm.sh | sudo bash
-
-# Native install (no Docker, any Linux / macOS)
-curl -fsSL https://nexo-rs.dev/install.sh | bash
-
-# Cargo (slow but works anywhere with Rust)
-cargo install nexo-rs
+# OR download a pre-built binary from GitHub Releases:
+#   https://github.com/lordmacu/nexo-rs/releases
+# OR Docker:
+#   docker pull ghcr.io/lordmacu/nexo-rs:latest
 ```
 
 Verify:
