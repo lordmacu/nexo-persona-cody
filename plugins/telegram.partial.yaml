@@ -1,0 +1,24 @@
+# Cody's Telegram bot instance — append this block to your daemon's
+# `~/.nexo/plugins/telegram.yaml` under the existing top-level
+# `telegram:` list. install.sh will do the merge automatically when
+# possible; if your telegram.yaml has a more complex shape (e.g.
+# nested under a different key, or already has a `cody_nexo_bot`
+# entry), install.sh will skip the merge and ask you to do it
+# manually.
+#
+# The token resolves from `secrets/cody_nexo_bot_telegram_token.txt`
+# under the daemon's state root (default ~/.nexo/secrets/). The
+# `${file:...}` syntax is parsed by the standard nexo-rs config
+# loader.
+#
+# `allow_agents: [cody]` restricts inbound messages from this bot
+# to the `cody` agent only — other agents in your daemon won't
+# accidentally process them.
+
+- instance: cody_nexo_bot
+  token: ${file:./secrets/cody_nexo_bot_telegram_token.txt}
+  polling:
+    enabled: true
+    interval_ms: 1000
+  allow_agents:
+  - cody

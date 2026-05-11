@@ -1,0 +1,19 @@
+# Secrets — operators write their real tokens here; only .template
+# files are versioned so the repo shows the shape without leaking
+# anything sensitive.
+secrets/*.txt
+!secrets/*.template
+
+# Workspace runtime artifacts — the persona ships an empty starter
+# (a Phase 1 skeleton) under data/workspace/cody/, but the daemon
+# also writes backups + transcripts + dream logs there as it runs.
+# Operators' real runs stay local.
+data/workspace/cody/PHASES.md.bak*
+data/workspace/cody/.git/
+data/transcripts/cody/*.jsonl
+
+# Editor + OS noise
+*.swp
+*.swo
+.DS_Store
+*~

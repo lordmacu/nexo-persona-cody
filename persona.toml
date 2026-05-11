@@ -1,0 +1,73 @@
+# nexo-rs persona pack manifest (v1).
+#
+# A persona pack bundles an out-of-tree agent definition (system
+# prompt + plugin bindings + workspace seed + secrets templates)
+# that operators install into their nexo-rs daemon via
+# `./install.sh`. Distinct from a `plugin.toml` manifest — plugins
+# register code surface (tools/channels/hooks/etc.); personas
+# register CONFIG that consumes that surface.
+#
+# Schema documented at: https://github.com/lordmacu/nexo-rs/blob/main/docs/src/personas/persona-toml.md (TBD)
+
+manifest_version = 1
+
+[persona]
+id          = "cody"
+version     = "0.1.0"
+description = "Programmer pair driving Claude Code goals from chat (Telegram + WhatsApp)"
+# Earliest nexo-rs daemon version this persona is known to work with.
+# The Phase 90 audit + 5 deudas (Phase A) shipped in 0.1.6 — older
+# daemons are missing add_hook / remove_hook / chain / parallel
+# handlers that Cody's system prompt references.
+min_nexo_version = ">=0.1.6"
+homepage    = "https://github.com/lordmacu/nexo-persona-cody"
+
+[persona.requires]
+# Plugins the operator must have enabled in their daemon for the
+# persona to function end-to-end. install.sh prints a clear message
+# if any is missing (does not auto-install — plugins are the
+# operator's call).
+plugins = ["telegram", "whatsapp"]
+
+# Daemon FEATURES (not capability grants) the persona depends on.
+# These are framework-level toggles the agent config assumes:
+#   - dispatch_policy:full    Cody dispatches Claude Code goals; the
+#                             daemon's in-process driver auto-boots
+#                             when any agent has dispatch_policy.mode
+#                             = full (per src/main.rs:3843-3853).
+#   - claude_code_subprocess  The driver-claude / driver-loop /
+#                             driver-permission stack must be
+#                             present (Phase 67 substrate). Always
+#                             true in stock nexo-rs ≥ 0.1.0.
+features = ["dispatch_policy:full", "claude_code_subprocess"]
+
+# Env vars the operator must export before `nexo daemon` starts.
+# install.sh prints `export` lines covering these.
+[[persona.requires.env_vars]]
+name        = "ANTHROPIC_API_KEY"
+required    = true
+description = "Claude Sonnet 4.6 API key (or use OAuth subscription via the LLM keys wizard)"
+
+[[persona.requires.env_vars]]
+name        = "TELEGRAM_BOT_TOKEN_CODY"
+required    = false
+description = "Telegram bot token. Optional — operators can put it in secrets/cody_nexo_bot_telegram_token.txt instead."
+
+[[persona.requires.env_vars]]
+name        = "NEXO_DISALLOW_SELF_MODIFY"
+required    = false
+description = "Set to 1 in production / frozen-binary deploys to refuse dispatching against the daemon's own source. Default OFF in dev (canonical Cody-on-nexo-rs flow)."
+
+[persona.contributes]
+# Files the persona ships. install.sh resolves each entry to a
+# destination path under the operator's config dir
+# (default ~/.nexo, override with --config-dir).
+agent_configs          = ["agents.d/cody.yaml"]
+plugin_configs_partial = ["plugins/telegram.partial.yaml"]
+secrets_templates      = ["secrets/cody_nexo_bot_telegram_token.txt.template"]
+workspace_seed         = "data/workspace/cody/"
+
+[persona.meta]
+author     = "Cristian García <informacion@cristiangarcia.co>"
+license    = "MIT"
+repository = "https://github.com/lordmacu/nexo-persona-cody"
