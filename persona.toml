@@ -1,19 +1,22 @@
-# nexo-rs persona pack manifest (v1).
+# nexo-rs persona pack manifest (v2).
 #
 # A persona pack bundles an out-of-tree agent definition (system
 # prompt + plugin bindings + workspace seed + secrets templates)
-# that operators install into their nexo-rs daemon via
-# `./install.sh`. Distinct from a `plugin.toml` manifest — plugins
-# register code surface (tools/channels/hooks/etc.); personas
-# register CONFIG that consumes that surface.
+# that operators install into their nexo-rs daemon via either
+# `./install.sh` (legacy v1 flow, still supported for airgapped /
+# CI hosts) or `nexo persona install lordmacu/nexo-persona-cody`
+# (v2 flow, daemon-managed since nexo-rs cody-cli-install F1-F7).
+# Distinct from a `plugin.toml` manifest — plugins register code
+# surface (tools/channels/hooks/etc.); personas register CONFIG
+# that consumes that surface.
 #
-# Schema documented at: https://github.com/lordmacu/nexo-rs/blob/main/docs/src/personas/persona-toml.md (TBD)
+# Schema reference: https://lordmacu.github.io/nexo-rs/personas/install.html
 
-manifest_version = 1
+manifest_version = 2
 
 [persona]
 id          = "cody"
-version     = "0.1.0"
+version     = "0.2.0"
 description = "Programmer pair driving Claude Code goals from chat (Telegram + WhatsApp)"
 # Earliest nexo-rs daemon version this persona is known to work with.
 # The Phase 90 audit + 5 deudas (Phase A) shipped in 0.1.6 — older

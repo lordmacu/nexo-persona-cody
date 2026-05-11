@@ -5,6 +5,45 @@ All notable changes to this persona pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-05-11
+
+Daemon-managed install flow lands. The persona pack now opts into
+the v2 manifest schema consumed by `nexo persona install` (added
+to `nexo-rs` in the cody-cli-install F1-F7 wave). The legacy
+`install.sh` (v1) flow stays supported for airgapped / CI hosts;
+operators pick per-pack via `manifest_version`.
+
+### Added
+
+- `.github/workflows/release.yml` — on tag push (`v*.*.*`):
+  builds the noarch tarball (`cody-<version>-noarch.tar.gz`),
+  computes its sha256, creates the GitHub Release, and uploads
+  three assets matching the v2 wire convention:
+  - `persona.toml` (the manifest itself, downloaded by the
+    resolver to learn `persona.id` before the tarball fetch)
+  - `cody-<version>-noarch.tar.gz` (the pack contents)
+  - `cody-<version>-noarch.tar.gz.sha256` (single line of
+    lowercase hex, 64 chars + newline)
+
+### Changed
+
+- `persona.toml`: `manifest_version` bumped from `1` to `2`. No
+  field-shape changes — the v2 typed parser in
+  `nexo-persona-manifest` accepts the same TOML.
+- `version` bumped from `0.1.0` to `0.2.0`. Compatible with
+  nexo-rs ≥ 0.1.6 (the same `min_nexo_version` baseline as v1).
+
+### Install
+
+```bash
+# v2 daemon-managed flow (new):
+nexo persona install lordmacu/nexo-persona-cody@v0.2.0
+
+# v1 install.sh flow (still works for airgapped hosts):
+git clone https://github.com/lordmacu/nexo-persona-cody
+cd nexo-persona-cody && ./install.sh
+```
+
 ## [0.1.0] — 2026-05-11
 
 Initial extraction from `nexo-rs` (`lordmacu/nexo-rs`) per the

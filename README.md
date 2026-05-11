@@ -21,23 +21,90 @@ pair that:
 
 ## Install
 
-Two install modes coexist:
+### Step 0 — Install nexo-rs
 
-### A) `nexo persona install` (canonical, future v0.2.x)
+Cody runs on the [`nexo-rs`](https://github.com/lordmacu/nexo-rs)
+daemon. Zero config required to boot since Phase 93 — `nexo
+daemon` runs against `Default::default()` for every YAML when the
+config dir is missing or partial.
 
-Deferred follow-up — to land in v0.2.x as a mirror of the existing
-`nexo plugin install <owner>/<repo>` flow (Phase 31.1.c of nexo-rs).
-Will be:
+One-liner installer (delegates to `cargo install --git` until the
+Phase 27.2 binary pipeline ships its first GA assets):
 
 ```bash
-nexo persona install lordmacu/nexo-persona-cody[@v0.2.0]
+curl -fsSL https://lordmacu.github.io/nexo-rs/install.sh | bash
 ```
 
-Same UX as plugins: GitHub Releases tarball download + sha256 +
-optional cosign verify + extract to the daemon's persona discovery
-path + boot-time auto-discovery.
+Or pick another channel from the
+[installation guide](https://lordmacu.github.io/nexo-rs/getting-started/installation.html):
+Docker (`docker pull ghcr.io/lordmacu/nexo-rs:latest`), Termux
+(`pkg install rust && curl ... install.sh | bash`), or build from
+source (`git clone && cargo build --release`).
 
-### B) `./install.sh` (today + airgapped / dev-loop)
+Verify:
+
+```bash
+nexo --version   # ≥ 0.1.6 required by this persona
+```
+
+(Optional) scaffold documented sample YAMLs to start tweaking
+from a known-good baseline rather than the zero-config defaults:
+
+```bash
+nexo init             # creates ~/.nexo/ with 19 commented YAMLs
+```
+
+### Step 1 — Install Cody (`nexo persona install`)
+
+Canonical flow. Daemon-managed — same UX as `nexo plugin
+install`: GitHub Releases tarball download + sha256 verify +
+extract to the daemon's persona discovery path + boot-time
+auto-discovery.
+
+```bash
+# Latest release:
+nexo persona install lordmacu/nexo-persona-cody
+
+# Pin to a specific version:
+nexo persona install lordmacu/nexo-persona-cody@v0.2.0
+
+# JSON output (CI):
+nexo persona install lordmacu/nexo-persona-cody --json
+```
+
+After install, verify:
+
+```bash
+nexo persona list             # cody  0.2.0  ~/.nexo/personas/cody-0.2.0
+nexo persona get cody         # full manifest + resolved paths
+```
+
+> Requires v0.2.0+ of this persona pack (v1 packs error with a
+> migration hint pointing at `install.sh`). v0.1.x users → use
+> Step 1' below.
+
+#### `personas/discovery.yaml` — where the pack lands
+
+By default `nexo persona install` writes to
+`<state_dir>/personas/`. To pin to a custom path, drop a
+`<config_dir>/personas/discovery.yaml`:
+
+```yaml
+discovery:
+  search_paths:
+    - /var/lib/nexo/personas      # system-wide
+    - /home/operator/.nexo/personas
+  disabled: []
+  allowlist: []
+```
+
+`nexo persona install --dest <dir>` overrides per-invocation.
+
+### Step 1' — `./install.sh` (legacy v1 / airgapped)
+
+For airgapped hosts (no GitHub access), CI pipelines that skip
+daemon state, and inner-loop dev against an unreleased pack.
+The v1 install.sh flow stays supported indefinitely:
 
 ```bash
 git clone https://github.com/lordmacu/nexo-persona-cody ~/chat/nexo-persona-cody
@@ -45,7 +112,7 @@ cd ~/chat/nexo-persona-cody
 ./install.sh
 ```
 
-Available NOW (v0.1.x). The script:
+The script:
 
 1. Pre-checks `nexo` ≥ 0.1.6 + `git` + `bash` 4+.
 2. Copies `agents.d/cody.yaml` into your daemon's config dir.
@@ -58,10 +125,24 @@ Available NOW (v0.1.x). The script:
 Default config dir is `~/.nexo`. Override with
 `./install.sh --config-dir /your/path`.
 
-The shell script will keep working alongside the CLI flow once
-v0.2.x ships — useful for airgapped hosts with no GitHub access,
-CI pipelines that don't want to invoke `nexo` to avoid daemon
-state, and inner-loop development against an unreleased pack.
+> The two flows coexist — operators pick per-pack via the
+> manifest's `manifest_version`. v2 packs go through
+> `nexo persona install`; v1 packs go through `install.sh`.
+
+### Step 1'' — `nexo persona run <path>` (inner-loop dev)
+
+For developing this persona itself:
+
+```bash
+git clone https://github.com/lordmacu/nexo-persona-cody /tmp/cody-dev
+mv /tmp/cody-dev /tmp/cody-0.99.0      # rename to <id>-<version>/
+$EDITOR /tmp/cody-0.99.0/persona.toml  # bump version, hack
+nexo persona run /tmp/cody-0.99.0      # boots daemon with this pack
+```
+
+Mirror of `nexo plugin run`. Validates the manifest, prepends the
+parent dir to `personas.discovery.search_paths`, falls through
+to daemon boot.
 
 ## Setup after install
 
@@ -174,7 +255,10 @@ ships the Phase 90 audit fixes — `add_hook` / `remove_hook` /
 `program_phase_chain` / `program_phase_parallel` handlers + the
 shared `LlmRegistry` that PreflightHandler reads).
 
-`./install.sh` enforces this at install time.
+`nexo persona install` enforces this at install time via the
+`min_nexo_version` field in `persona.toml` (rejects with a
+clear error when the daemon is too old). `./install.sh` checks
+the same baseline before touching disk.
 
 ## Troubleshooting
 
@@ -228,7 +312,19 @@ file), edit `~/.nexo/plugins/telegram.yaml` manually and replace the
 
 ## Upgrade
 
-To get a newer version of the persona:
+### v0.2.x (canonical)
+
+```bash
+nexo persona upgrade cody     # re-resolves @latest, refuses downgrade
+# or pin explicitly:
+nexo persona install lordmacu/nexo-persona-cody@v0.2.1
+```
+
+`nexo persona upgrade` peeks the resolved version BEFORE
+downloading, refuses to downgrade, and short-circuits with a
+no-op response when the on-disk version already matches.
+
+### v0.1.x (install.sh)
 
 ```bash
 cd ~/chat/nexo-persona-cody
@@ -241,6 +337,19 @@ workspace seed README/PHASES skeleton/FOLLOWUPS/DREAMS) but **never**
 overwrites your populated `secrets/cody_nexo_bot_telegram_token.txt`.
 
 ## Uninstall
+
+### v0.2.x
+
+```bash
+nexo persona remove cody --yes
+```
+
+Atomic dir removal of `<install_root>/cody-<version>/`. The
+secrets file at `~/.nexo/secrets/cody_nexo_bot_telegram_token.txt`
+isn't touched (it's outside the pack); delete manually if you
+want a full purge.
+
+### v0.1.x (install.sh-managed installs)
 
 The persona pack writes only into your config dir. To remove:
 
@@ -258,8 +367,11 @@ Restart the daemon afterwards.
 
 ```
 nexo-persona-cody/
-├── persona.toml             # v1 manifest (id, version, requires, contributes)
-├── install.sh               # idempotent installer (--dry-run / --reinstall)
+├── persona.toml             # v2 manifest (consumed by `nexo persona install`)
+├── install.sh               # legacy v1 installer (--dry-run / --reinstall)
+├── .github/workflows/
+│   └── release.yml          # on tag push: builds noarch tarball + sha256,
+│                            # uploads to GitHub release per v2 wire convention
 ├── agents.d/
 │   └── cody.yaml            # the agent config + system prompt
 ├── plugins/
